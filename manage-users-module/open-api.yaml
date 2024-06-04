@@ -1,0 +1,85 @@
+openapi: "3.0.1"
+info:
+  title: "adoption-app-stack"
+  version: "1.0"
+servers:
+- url: "https://f5ewp0e82e.execute-api.eu-west-1.amazonaws.com/{basePath}"
+  variables:
+    basePath:
+      default: "Prod"
+paths:
+  /users:
+    post:
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:949010940542:function:adoption-app-stack-CreateUserHandlerFunction-uBLPneWy54R3/invocations"
+        passthroughBehavior: "when_no_match"
+  /login:
+    post:
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:949010940542:function:adoption-app-stack-LoginUserHandlerFunction-GzP7Inzheaqo/invocations"
+        passthroughBehavior: "when_no_match"
+  /users/me:
+    get:
+      parameters:
+        - name: "AccessToken"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      security:
+      - AdoptionAppApiAuthorizer: []
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:949010940542:function:adoption-app-stack-GetUserHandlerFunction-QeXyS5cwIRnH/invocations"
+        passthroughBehavior: "when_no_match"
+  /confirm:
+    post:
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:949010940542:function:adoption-app-stack-ConfirmUserHandlerFunction-APQ9gspShKLh/invocations"
+        passthroughBehavior: "when_no_match"
+  /users/{userName}:
+    get:
+      parameters:
+      - name: "userName"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:949010940542:function:adoption-app-stack-GetUserByUsernameHandlerFunctio-9HuclabumYpg/invocations"
+        passthroughBehavior: "when_no_match"
+  /users/{userName}/add-to-group:
+    post:
+      parameters:
+      - name: "userName"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      security:
+      - AdoptionAppApiAuthorizer: []
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:949010940542:function:adoption-app-stack-AddUserToGroupHandlerFunction-tANkJqRvzzt7/invocations"
+        passthroughBehavior: "when_no_match"
+components:
+  securitySchemes:
+    AdoptionAppApiAuthorizer:
+      type: "apiKey"
+      name: "Authorization"
+      in: "header"
+      x-amazon-apigateway-authtype: "cognito_user_pools"
+      x-amazon-apigateway-authorizer:
+        type: "cognito_user_pools"
+        providerARNs:
+        - "arn:aws:cognito-idp:eu-west-1:949010940542:userpool/eu-west-1_zkiFUj1Xp"

@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  adoption-app
+
+  Sample SAM Template for adoption-app
+
+Globals:
+  Function:
+    Timeout: 20
+    Runtime: java21
+    Architectures:
+      - x86_64
+    MemorySize: 512
+    Environment:
+      Variables:
+        MY_COGNITO_POOL_APP_CLIENT_ID: AQICAHjIz3stiuCEEfbDY+iNXAyr9TsFFQO9u2T17Kwmt7MSZAESlHaqNwFQLRiF+LD2kxqqAAAAdzB1BgkqhkiG9w0BBwagaDBmAgEAMGEGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM2iOi9Ss3DCA7xqLaAgEQgDSbE4eFHJn+rXrjlDQ482cdJr24LAKUP9MGkM+Jr8NTwsCpYo7s9mPuVeVl/62JQWQn2OWI
+        MY_COGNITO_POOL_APP_CLIENT_SECRET: AQICAHjIz3stiuCEEfbDY+iNXAyr9TsFFQO9u2T17Kwmt7MSZAGrfbFB3W2Ykeg/DwrEXy3dAAAAlTCBkgYJKoZIhvcNAQcGoIGEMIGBAgEAMHwGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMsVwwPCyzOnk+o6+jAgEQgE+A4iRYptwBZrTdxO9ebCrZgjyR5rfUQSIBZKPT5hQv28mrXYylwo50W6fdGtwuXgp/KF5xhNhDkMd1wgJNUTu/uv6i11PxrDKH0tQk30eI
+        MY_COGNITO_POOL_ID: AQICAHjIz3stiuCEEfbDY+iNXAyr9TsFFQO9u2T17Kwmt7MSZAGNEQocIL6I9Gx6j+EUgbQtAAAAcTBvBgkqhkiG9w0BBwagYjBgAgEAMFsGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMR0dlVR+fCn5yudSzAgEQgC6PrIthh3ysbPZeFX3J1PqBasTxy/7/XYuXjNt/n3YvY3KYzr4t1SKa5fnYIy3O
+
+Resources:
+  AdoptionApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: open-api.yaml
+
+  CreateUserHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ManageUsersModule
+      Handler: com.adoptionapp.aws.CreateUserHandler::handleRequest
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: "*"
+      Events:
+        CreateUser:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: post
+            RestApiId:
+              Ref: AdoptionApi
+
+  ConfirmUserHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ManageUsersModule
+      Handler: com.adoptionapp.aws.ConfirmUserHandler::handleRequest
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: "*"
+      Events:
+        ConfirmUser:
+          Type: Api
+          Properties:
+            Path: /confirm
+            Method: post
+            RestApiId:
+              Ref: AdoptionApi
+
+  LoginUserHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ManageUsersModule
+      Handler: com.adoptionapp.aws.LoginUserHandler::handleRequest
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: "*"
+      Events:
+        LoginUser:
+          Type: Api
+          Properties:
+            Path: /login
+            Method: post
+            RestApiId:
+              Ref: AdoptionApi
+
+  AddUserToGroupHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ManageUsersModule
+      Handler: com.adoptionapp.aws.AddUserToGroupHandler::handleRequest
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - 'cognito-idp:AdminAddUserToGroup'
+              Resource: "arn:aws:cognito-idp:eu-west-1:949010940542:userpool/eu-west-1_zkiFUj1Xp"
+      Events:
+        AddUserToGroup:
+          Type: Api
+          Properties:
+            Path: /users/{userName}/add-to-group
+            Method: post
+            RestApiId:
+              Ref: AdoptionApi
+
+  GetUserHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ManageUsersModule
+      Handler: com.adoptionapp.aws.GetUserHandler::handleRequest
+      Events:
+        GetUser:
+          Type: Api
+          Properties:
+            Path: /users/me
+            Method: get
+            RestApiId:
+              Ref: AdoptionApi
+
+  LambdaAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ManageUsersModule
+      Handler: com.adoptionapp.aws.authorizer.LambdaAuthorizer::handleRequest
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: "*"
+
+  GetUserByUsernameHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ManageUsersModule
+      Handler: com.adoptionapp.aws.GetUserByUsernameHandler::handleRequest
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: "*"
+      Events:
+        GetUserByUsername:
+          Type: Api
+          Properties:
+            Path: /users/{userName}
+            Method: get
+            RestApiId:
+              Ref: AdoptionApi
+
+Outputs:
+  CreateUserApi:
+    Description: "API Gateway endpoint URL for Prod stage for CreateUserHandler Function"
+    Value: !Sub "https://${AdoptionApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/users"
+  CreateUserHandlerFunctionArn:
+    Description: "CreateUserHandler Lambda Function ARN"
+    Value: !GetAtt CreateUserHandlerFunction.Arn

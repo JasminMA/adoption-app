@@ -1,0 +1,13 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "adoption-app-stack"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-s4bev8b7k3xe"
+s3_prefix = "adoption-app-stack"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+resolve_s3 = true
+confirm_changeset = true
+disable_rollback = true
